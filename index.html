@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertisseur de Photos en Tableaux Minecraft</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary: #673AB7;
+            --dark: #333;
+            --light: #f5f5f5;
+            --danger: #f44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .settings-panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-panel {
+            flex: 2;
+            min-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upload-area {
+            border: 3px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+
+        .upload-area.active {
+            border-color: var(--primary);
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 16px;
+        }
+
+        .range-value {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        button.secondary {
+            background-color: var(--secondary);
+        }
+
+        button.secondary:hover {
+            background-color: #5E35B1;
+        }
+
+        button.danger {
+            background-color: var(--danger);
+        }
+
+        button.danger:hover {
+            background-color: #D32F2F;
+        }
+
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            overflow: auto;
+        }
+
+        .preview-original, .preview-minecraft {
+            margin-bottom: 20px;
+            max-width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        .preview-minecraft {
+            image-rendering: pixelated;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .export-options {
+            margin-top: 20px;
+        }
+
+        .color-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+        }
+
+        .palette-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        #custom-palette {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .loading-spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #pixelInfoBox {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+
+        .preview-grid {
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .preview-panel, .settings-panel {
+                min-width: 100%;
+            }
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Convertisseur de Photos en Tableaux Minecraft</h1>
+        <p>Transformez vos images en tableaux personnalisés pour Minecraft</p>
+    </header>
+
+    <div class="container">
+        <div class="settings-panel">
+            <div class="upload-area" id="upload-area">
+                <i>📁</i>
+                <h3>Glissez une image ou cliquez pour parcourir</h3>
+                <p>Format supportés: JPG, PNG, GIF, BMP</p>
+                <input type="file" id="image-upload" accept="image/*">
+            </div>
+
+            <div class="control-group">
+                <label for="pixel-size">Taille des pixels:</label>
+                <input type="range" id="pixel-size" min="1" max="16" value="4">
+                <span class="range-value" id="pixel-size-value">4</span>
+            </div>
+
+            <div class="control-group">
+                <label for="live-mode">Mode Live:</label>
+                <div class="checkbox-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="live-mode" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span>Activer la prévisualisation en temps réel</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="dithering">Diffusion d'erreur (Dithering):</label>
+                <div class="checkbox-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="dithering">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Activer</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="palette-type">Type de palette:</label>
+                <select id="palette-type">
+                    <option value="minecraft">Palette Minecraft</option>
+                    <option value="minecraft-extended">Palette Minecraft étendue</option>
+                    <option value="custom">Palette personnalisée</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="custom-palette-container" style="display: none;">
+                <label>Palette personnalisée:</label>
+                <div id="custom-palette"></div>
+                <button id="add-color" class="secondary">Ajouter une couleur</button>
+            </div>
+
+            <div class="control-group">
+                <label for="contrast">Contraste:</label>
+                <input type="range" id="contrast" min="-100" max="100" value="0">
+                <span class="range-value" id="contrast-value">0</span>
+            </div>
+
+            <div class="control-group">
+                <label for="brightness">Luminosité:</label>
+                <input type="range" id="brightness" min="-100" max="100" value="0">
+                <span class="range-value" id="brightness-value">0</span>
+            </div>
+
+            <div class="control-group">
+                <label for="saturation">Saturation:</label>
+                <input type="range" id="saturation" min="-100" max="100" value="0">
+                <span class="range-value" id="saturation-value">0</span>
+            </div>
+
+            <button id="convert-btn">Convertir</button>
+            <button id="reset-btn" class="danger">Réinitialiser</button>
+        </div>
+
+        <div class="preview-panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="preview">Aperçu</div>
+                <div class="tab" data-tab="export">Exporter</div>
+            </div>
+
+            <div class="tab-content active" data-tab="preview">
+                <div class="preview-container">
+                    <h3>Image originale</h3>
+                    <img id="preview-original" class="preview-original">
+                    <h3>Aperçu tableau Minecraft</h3>
+                    <div class="preview-grid">
+                        <canvas id="preview-minecraft" class="preview-minecraft"></canvas>
+                        <div id="pixelInfoBox"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" data-tab="export">
+                <div class="export-options">
+                    <div class="control-group">
+                        <label for="export-type">Format d'exportation:</label>
+                        <select id="export-type">
+                            <option value="png">Image PNG</option>
+                            <option value="json">Données JSON</option>
+                            <option value="schematic">Minecraft Schematic</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="export-scale">Échelle d'exportation:</label>
+                        <input type="range" id="export-scale" min="1" max="10" value="1">
+                        <span class="range-value" id="export-scale-value">1</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="export-grid">Grille:</label>
+                        <div class="checkbox-container">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="export-grid">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Afficher la grille</span>
+                        </div>
+                    </div>
+                    <button id="export-btn">Télécharger</button>
+                    <button id="copy-btn" class="secondary">Copier vers le presse-papier</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Traitement en cours...</p>
+    </div>
+
+    <script>
+        // Définition des palettes de couleurs Minecraft
+        const MINECRAFT_PALETTE = [
+            { name: "Blanc", hex: "#FFFFFF", id: "white_wool" },
+            { name: "Orange clair", hex: "#F9801D", id: "orange_wool" },
+            { name: "Magenta", hex: "#C74EBD", id: "magenta_wool" },
+            { name: "Bleu clair", hex: "#3AB3DA", id: "light_blue_wool" },
+            { name: "Jaune", hex: "#FED83D", id: "yellow_wool" },
+            { name: "Vert clair", hex: "#80C71F", id: "lime_wool" },
+            { name: "Rose", hex: "#F38BAA", id: "pink_wool" },
+            { name: "Gris", hex: "#474F52", id: "gray_wool" },
+            { name: "Gris clair", hex: "#9D9D97", id: "light_gray_wool" },
+            { name: "Cyan", hex: "#169C9C", id: "cyan_wool" },
+            { name: "Violet", hex: "#8932B8", id: "purple_wool" },
+            { name: "Bleu", hex: "#3C44AA", id: "blue_wool" },
+            { name: "Marron", hex: "#835432", id: "brown_wool" },
+            { name: "Vert", hex: "#5E7C16", id: "green_wool" },
+            { name: "Rouge", hex: "#B02E26", id: "red_wool" },
+            { name: "Noir", hex: "#1D1D21", id: "black_wool" }
+        ];
+
+        const MINECRAFT_EXTENDED_PALETTE = [
+            ...MINECRAFT_PALETTE,
+            { name: "Terracotta blanc", hex: "#D1B1A1", id: "white_terracotta" },
+            { name: "Terracotta orange", hex: "#9F5224", id: "orange_terracotta" },
+            { name: "Terracotta magenta", hex: "#95576C", id: "magenta_terracotta" },
+            { name: "Terracotta bleu clair", hex: "#706C8A", id: "light_blue_terracotta" },
+            { name: "Terracotta jaune", hex: "#B9801E", id: "yellow_terracotta" },
+            { name: "Terracotta vert clair", hex: "#677535", id: "lime_terracotta" },
+            { name: "Terracotta rose", hex: "#A04D4E", id: "pink_terracotta" },
+            { name: "Terracotta gris", hex: "#392923", id: "gray_terracotta" },
+            { name: "Terracotta gris clair", hex: "#876B62", id: "light_gray_terracotta" },
+            { name: "Terracotta cyan", hex: "#575C5C", id: "cyan_terracotta" },
+            { name: "Terracotta violet", hex: "#764656", id: "purple_terracotta" },
+            { name: "Terracotta bleu", hex: "#4A3C5B", id: "blue_terracotta" },
+            { name: "Terracotta marron", hex: "#4D3323", id: "brown_terracotta" },
+            { name: "Terracotta vert", hex: "#4B522A", id: "green_terracotta" },
+            { name: "Terracotta rouge", hex: "#8E3C2E", id: "red_terracotta" },
+            { name: "Terracotta noir", hex: "#251610", id: "black_terracotta" },
+            { name: "Terracotta", hex: "#9E5B4B", id: "terracotta" },
+            { name: "Béton blanc", hex: "#E9ECEC", id: "white_concrete" },
+            { name: "Béton orange", hex: "#F07613", id: "orange_concrete" },
+            { name: "Béton magenta", hex: "#BD44B3", id: "magenta_concrete" },
+            { name: "Béton bleu clair", hex: "#3AAFD9", id: "light_blue_concrete" },
+            { name: "Béton jaune", hex: "#F8C627", id: "yellow_concrete" },
+            { name: "Béton vert clair", hex: "#70B919", id: "lime_concrete" },
+            { name: "Béton rose", hex: "#ED8DAC", id: "pink_concrete" },
+            { name: "Béton gris", hex: "#3E4447", id: "gray_concrete" },
+            { name: "Béton gris clair", hex: "#8E8E86", id: "light_gray_concrete" },
+            { name: "Béton cyan", hex: "#158E8E", id: "cyan_concrete" },
+            { name: "Béton violet", hex: "#792AAC", id: "purple_concrete" },
+            { name: "Béton bleu", hex: "#35399D", id: "blue_concrete" },
+            { name: "Béton marron", hex: "#724728", id: "brown_concrete" },
+            { name: "Béton vert", hex: "#546D1B", id: "green_concrete" },
+            { name: "Béton rouge", hex: "#A12722", id: "red_concrete" },
+            { name: "Béton noir", hex: "#131313", id: "black_concrete" }
+        ];
+
+        // Variables globales
+        let currentImage = null;
+        let currentPixelData = null;
+        let customPalette = [];
+        let liveMode = true; // Mode live activé par défaut
+
+        // Éléments DOM
+        const uploadArea = document.getElementById('upload-area');
+        const imageUpload = document.getElementById('image-upload');
+        const previewOriginal = document.getElementById('preview-original');
+        const previewMinecraft = document.getElementById('preview-minecraft');
+        const pixelSize = document.getElementById('pixel-size');
+        const pixelSizeValue = document.getElementById('pixel-size-value');
+        const ditheringCheckbox = document.getElementById('dithering');
+        const paletteType = document.getElementById('palette-type');
+        const customPaletteContainer = document.getElementById('custom-palette-container');
+        const customPaletteDiv = document.getElementById('custom-palette');
+        const addColorButton = document.getElementById('add-color');
+        const contrastSlider = document.getElementById('contrast');
+        const contrastValue = document.getElementById('contrast-value');
+        const brightnessSlider = document.getElementById('brightness');
+        const brightnessValue = document.getElementById('brightness-value');
+        const saturationSlider = document.getElementById('saturation');
+        const saturationValue = document.getElementById('saturation-value');
+        const convertBtn = document.getElementById('convert-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const exportType = document.getElementById('export-type');
+        const exportScale = document.getElementById('export-scale');
+        const exportScaleValue = document.getElementById('export-scale-value');
+        const exportGrid = document.getElementById('export-grid');
+        const exportBtn = document.getElementById('export-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const loading = document.querySelector('.loading');
+        const pixelInfoBox = document.getElementById('pixelInfoBox');
+        const liveModeToggle = document.getElementById('live-mode');
+
+        // Initialisation
+        function init() {
+            // Événements pour l'upload de fichier
+            uploadArea.addEventListener('click', () => imageUpload.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('active');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('active');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('active');
+                
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.match('image.*')) {
+                    handleImageUpload(file);
+                }
+            });
+
+            imageUpload.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleImageUpload(e.target.files[0]);
+                }
+            });
+
+            // Événements pour les contrôles
+            pixelSize.addEventListener('input', () => {
+                pixelSizeValue.textContent = pixelSize.value;
+                if (liveMode && currentImage) processImage();
+            });
+
+            contrastSlider.addEventListener('input', () => {
+                contrastValue.textContent = contrastSlider.value;
+                if (liveMode && currentImage) processImage();
+            });
+
+            brightnessSlider.addEventListener('input', () => {
+                brightnessValue.textContent = brightnessSlider.value;
+                if (liveMode && currentImage) processImage();
+            });
+
+            saturationSlider.addEventListener('input', () => {
+                saturationValue.textContent = saturationSlider.value;
+                if (liveMode && currentImage) processImage();
+            });
+            
+            liveModeToggle.addEventListener('change', () => {
+                liveMode = liveModeToggle.checked;
+            });
+            
+            ditheringCheckbox.addEventListener('change', () => {
+                if (liveMode && currentImage) processImage();
+            });
+
+            exportScale.addEventListener('input', () => {
+                exportScaleValue.textContent = exportScale.value;
+            });
+
+            paletteType.addEventListener('change', () => {
+                if (paletteType.value === 'custom') {
+                    customPaletteContainer.style.display = 'block';
+                    if (customPalette.length === 0) {
+                        // Initialisation avec quelques couleurs de base
+                        customPalette = [...MINECRAFT_PALETTE.slice(0, 5)];
+                    }
+                    renderCustomPalette();
+                } else {
+                    customPaletteContainer.style.display = 'none';
+                }
+                if (liveMode && currentImage) processImage();
+            });
+
+            addColorButton.addEventListener('click', () => {
+                const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+                customPalette.push({
+                    name: `Couleur ${customPalette.length + 1}`,
+                    hex: randomColor,
+                    id: `custom_${customPalette.length}`
+                });
+                renderCustomPalette();
+            });
+
+            // Évènements pour les onglets
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Activer l'onglet
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Afficher le contenu correspondant
+                    tabContents.forEach(content => {
+                        if (content.getAttribute('data-tab') === tabId) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            // Évènements pour les boutons
+            convertBtn.addEventListener('click', processImage);
+            resetBtn.addEventListener('click', resetSettings);
+            exportBtn.addEventListener('click', exportImage);
+            copyBtn.addEventListener('click', copyToClipboard);
+
+            // Initialiser l'info-bulle de pixel
+            previewMinecraft.addEventListener('mousemove', showPixelInfo);
+            previewMinecraft.addEventListener('mouseout', () => {
+                pixelInfoBox.style.display = 'none';
+            });
+        }
+
+        // Gérer l'upload d'image
+        function handleImageUpload(file) {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    previewOriginal.src = img.src;
+                    processImage();
+                };
+                img.src = e.target.result;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        // Traiter l'image
+        function processImage() {
+            if (!currentImage) return;
+            
+            showLoading(true);
+            
+            // Utiliser setTimeout pour permettre à l'UI de se mettre à jour
+            setTimeout(() => {
+                const canvas = document.createElement('canvas');
+                const pixelSizeVal = parseInt(pixelSize.value);
+                const ctx = canvas.getContext('2d');
+                
+                // Calculer les dimensions
+                const width = Math.floor(currentImage.width / pixelSizeVal);
+                const height = Math.floor(currentImage.height / pixelSizeVal);
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Dessiner l'image redimensionnée
+                ctx.drawImage(currentImage, 0, 0, width, height);
+                
+                // Appliquer les ajustements d'image
+                applyImageAdjustments(ctx, width, height);
+                
+                // Récupérer les données des pixels
+                const imageData = ctx.getImageData(0, 0, width, height);
+                
+                // Convertir les pixels selon la palette
+                let palette;
+                if (paletteType.value === 'minecraft') {
+                    palette = MINECRAFT_PALETTE;
+                } else if (paletteType.value === 'minecraft-extended') {
+                    palette = MINECRAFT_EXTENDED_PALETTE;
+                } else {
+                    palette = customPalette;
+                }
+                
+                const pixelData = convertToMinecraftColors(imageData, palette, ditheringCheckbox.checked);
+                currentPixelData = pixelData;
+                
+                // Afficher le résultat
+                renderMinecraftPreview(pixelData, width, height);
+                
+                showLoading(false);
+            }, 50);
+        }
+
+        // Appliquer les ajustements d'image (contraste, luminosité, saturation)
+        function applyImageAdjustments(ctx, width, height) {
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            
+            const contrastFactor = (259 * (parseInt(contrastSlider.value) + 255)) / (255 * (259 - parseInt(contrastSlider.value)));
+            const brightnessFactor = parseInt(brightnessSlider.value);
+            const saturationFactor = parseInt(saturationSlider.value) / 100 + 1;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                // Appliquer la luminosité
+                data[i] += brightnessFactor;
+                data[i + 1] += brightnessFactor;
+                data[i + 2] += brightnessFactor;
+                
+                // Appliquer le contraste
+                data[i] = constrain((contrastFactor * (data[i] - 128)) + 128);
+                data[i + 1] = constrain((contrastFactor * (data[i + 1] - 128)) + 128);
+                data[i + 2] = constrain((contrastFactor * (data[i + 2] - 128)) + 128);
+                
+                // Appliquer la saturation
+                const gray = 0.2989 * data[i] + 0.5870 * data[i + 1] + 0.1140 * data[i + 2];
+                data[i] = constrain(gray + saturationFactor * (data[i] - gray));
+                data[i + 1] = constrain(gray + saturationFactor * (data[i + 1] - gray));
+                data[i + 2] = constrain(gray + saturationFactor * (data[i + 2] - gray));
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // Fonction utilitaire pour contraindre une valeur entre 0 et 255
+        function constrain(value) {
+            return Math.max(0, Math.min(255, value));
+        }
+
+        // Convertir les pixels en couleurs Minecraft
+        function convertToMinecraftColors(imageData, palette, dithering) {
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            const result = new Array(width * height);
+            
+            // Créer une copie des données pour le dithering
+            const buffer = new Uint8ClampedArray(data);
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = (y * width + x) * 4;
+                    
+                    const r = buffer[i];
+                    const g = buffer[i + 1];
+                    const b = buffer[i + 2];
+                    
+                    // Trouver la couleur la plus proche dans la palette
+                    const closestColor = findClosestColor(r, g, b, palette);
+                    result[y * width + x] = closestColor;
+                    
+                    // Appliquer le dithering si activé
+                    if (dithering && (x < width - 1 || y < height - 1)) {
+                        const targetR = parseInt(closestColor.hex.substring(1, 3), 16);
+                        const targetG = parseInt(closestColor.hex.substring(3, 5), 16);
+                        const targetB = parseInt(closestColor.hex.substring(5, 7), 16);
+                        
+                        const errorR = r - targetR;
+                        const errorG = g - targetG;
+                        const errorB = b - targetB;
+                        
+                        // Floyd-Steinberg dithering
+                        if (x < width - 1) {
+                            // Droite
+                            buffer[i + 4] += errorR * 7 / 16;
+                            buffer[i + 5] += errorG * 7 / 16;
+                            buffer[i + 6] += errorB * 7 / 16;
+                        }
+                        
+                        if (y < height - 1) {
+                            if (x > 0) {
+                                // Bas gauche
+                                buffer[i + width * 4 - 4] += errorR * 3 / 16;
+                                buffer[i + width * 4 - 3] += errorG * 3 / 16;
+                                buffer[i + width * 4 - 2] += errorB * 3 / 16;
+                            }
+                            
+                            // Bas
+                            buffer[i + width * 4] += errorR * 5 / 16;
+                            buffer[i + width * 4 + 1] += errorG * 5 / 16;
+                            buffer[i + width * 4 + 2] += errorB * 5 / 16;
+                            
+                            if (x < width - 1) {
+                                // Bas droite
+                                buffer[i + width * 4 + 4] += errorR * 1 / 16;
+                                buffer[i + width * 4 + 5] += errorG * 1 / 16;
+                                buffer[i + width * 4 + 6] += errorB * 1 / 16;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        // Trouver la couleur la plus proche dans la palette
+        function findClosestColor(r, g, b, palette) {
+            let minDistance = Infinity;
+            let closestColor = null;
+            
+            for (const color of palette) {
+                const colorR = parseInt(color.hex.substring(1, 3), 16);
+                const colorG = parseInt(color.hex.substring(3, 5), 16);
+                const colorB = parseInt(color.hex.substring(5, 7), 16);
+                
+                // Distance euclidienne dans l'espace RGB
+                const distance = Math.sqrt(
+                    Math.pow(r - colorR, 2) +
+                    Math.pow(g - colorG, 2) +
+                    Math.pow(b - colorB, 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestColor = color;
+                }
+            }
+            
+            return closestColor;
+        }
+
+        // Afficher le résultat
+        function renderMinecraftPreview(pixelData, width, height) {
+            const canvas = previewMinecraft;
+            const ctx = canvas.getContext('2d');
+            const scale = 10;  // Échelle pour la prévisualisation
+            
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+            
+            // Dessiner les pixels
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const color = pixelData[y * width + x];
+                    ctx.fillStyle = color.hex;
+                    ctx.fillRect(x * scale, y * scale, scale, scale);
+                }
+            }
+            
+            // Dessiner la grille (optionnel)
+            if (exportGrid.checked) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.lineWidth = 1;
+                
+                for (let x = 0; x <= width; x++) {
+                    ctx.beginPath();
+                    ctx.moveTo(x * scale, 0);
+                    ctx.lineTo(x * scale, height * scale);
+                    ctx.stroke();
+                }
+                
+                for (let y = 0; y <= height; y++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y * scale);
+                    ctx.lineTo(width * scale, y * scale);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Afficher les informations du pixel au survol
+        function showPixelInfo(e) {
+            if (!currentPixelData) return;
+            
+            const rect = previewMinecraft.getBoundingClientRect();
+            const scale = 10;  // Échelle de prévisualisation
+            const x = Math.floor((e.clientX - rect.left) / scale);
+            const y = Math.floor((e.clientY - rect.top) / scale);
+            
+            const width = previewMinecraft.width / scale;
+            const height = previewMinecraft.height / scale;
+            
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                const pixelIndex = y * width + x;
+                const color = currentPixelData[pixelIndex];
+                
+                pixelInfoBox.innerHTML = `
+                    Position: (${x}, ${y})<br>
+                    Couleur: ${color.name}<br>
+                    Hex: ${color.hex}<br>
+                    ID: ${color.id}
+                `;
+                
+                pixelInfoBox.style.left = (e.clientX + 10) + 'px';
+                pixelInfoBox.style.top = (e.clientY + 10) + 'px';
+                pixelInfoBox.style.display = 'block';
+            } else {
+                pixelInfoBox.style.display = 'none';
+            }
+        }
+
+        // Exporter l'image
+        function exportImage() {
+            if (!currentPixelData) return;
+            
+            const width = previewMinecraft.width / 10;  // 10 = échelle de prévisualisation
+            const height = previewMinecraft.height / 10;
+            const exportScaleVal = parseInt(exportScale.value);
+            
+            switch (exportType.value) {
+                case 'png':
+                    exportAsPng(width, height, exportScaleVal);
+                    break;
+                case 'json':
+                    exportAsJson(width, height);
+                    break;
+                case 'schematic':
+                    exportAsSchematic(width, height);
+                    break;
+            }
+        }
+
+        // Exporter en PNG
+        function exportAsPng(width, height, scale) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+            
+            // Dessiner les pixels
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const color = currentPixelData[y * width + x];
+                    ctx.fillStyle = color.hex;
+                    ctx.fillRect(x * scale, y * scale, scale, scale);
+                }
+            }
+            
+            // Dessiner la grille si activée
+            if (exportGrid.checked) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.lineWidth = 1;
+                
+                for (let x = 0; x <= width; x++) {
+                    ctx.beginPath();
+                    ctx.moveTo(x * scale, 0);
+                    ctx.lineTo(x * scale, height * scale);
+                    ctx.stroke();
+                }
+                
+                for (let y = 0; y <= height; y++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y * scale);
+                    ctx.lineTo(width * scale, y * scale);
+                    ctx.stroke();
+                }
+            }
+            
+            // Télécharger l'image
+            const dataUrl = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = 'minecraft_painting.png';
+            a.click();
+        }
+
+        // Exporter en JSON
+        function exportAsJson(width, height) {
+            const jsonData = {
+                width,
+                height,
+                pixels: []
+            };
+            
+            for (let y = 0; y < height; y++) {
+                const row = [];
+                for (let x = 0; x < width; x++) {
+                    const color = currentPixelData[y * width + x];
+                    row.push({
+                        x,
+                        y,
+                        color: color.hex,
+                        name: color.name,
+                        id: color.id
+                    });
+                }
+                jsonData.pixels.push(row);
+            }
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonData, null, 2));
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = 'minecraft_painting.json';
+            a.click();
+        }
+
+        // Exporter au format schematic (simplifié)
+        function exportAsSchematic(width, height) {
+            // Créer un fichier de données basique pour Minecraft
+            // Note: Ceci est un format simplifié, pas un vrai format Schematic
+            const data = {
+                width,
+                height,
+                depth: 1,
+                blocks: [],
+                format: "minecraft_painting"
+            };
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const color = currentPixelData[y * width + x];
+                    data.blocks.push({
+                        x,
+                        y,
+                        z: 0,
+                        id: color.id
+                    });
+                }
+            }
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = 'minecraft_painting.mcpaint';
+            a.click();
+        }
+
+        // Copier vers le presse-papier
+        function copyToClipboard() {
+            if (!currentPixelData) return;
+            
+            const width = previewMinecraft.width / 10;
+            const height = previewMinecraft.height / 10;
+            
+            // Préparer les données selon le format
+            let data;
+            switch (exportType.value) {
+                case 'png':
+                    alert("Impossible de copier une image PNG dans le presse-papier. Veuillez utiliser le bouton de téléchargement.");
+                    return;
+                case 'json':
+                    const jsonData = {
+                        width,
+                        height,
+                        pixels: []
+                    };
+                    
+                    for (let y = 0; y < height; y++) {
+                        const row = [];
+                        for (let x = 0; x < width; x++) {
+                            const color = currentPixelData[y * width + x];
+                            row.push({
+                                x,
+                                y,
+                                color: color.hex,
+                                name: color.name,
+                                id: color.id
+                            });
+                        }
+                        jsonData.pixels.push(row);
+                    }
+                    
+                    data = JSON.stringify(jsonData, null, 2);
+                    break;
+                case 'schematic':
+                    const schematicData = {
+                        width,
+                        height,
+                        depth: 1,
+                        blocks: [],
+                        format: "minecraft_painting"
+                    };
+                    
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const color = currentPixelData[y * width + x];
+                            schematicData.blocks.push({
+                                x,
+                                y,
+                                z: 0,
+                                id: color.id
+                            });
+                        }
+                    }
+                    
+                    data = JSON.stringify(schematicData, null, 2);
+                    break;
+            }
+            
+            // Copier dans le presse-papier
+            navigator.clipboard.writeText(data)
+                .then(() => alert("Données copiées dans le presse-papier !"))
+                .catch(err => alert("Erreur lors de la copie: " + err));
+        }
+
+        // Réinitialiser les paramètres
+        function resetSettings() {
+            pixelSize.value = 4;
+            pixelSizeValue.textContent = 4;
+            
+            ditheringCheckbox.checked = false;
+            
+            paletteType.value = 'minecraft';
+            customPaletteContainer.style.display = 'none';
+            
+            contrastSlider.value = 0;
+            contrastValue.textContent = 0;
+            
+            brightnessSlider.value = 0;
+            brightnessValue.textContent = 0;
+            
+            saturationSlider.value = 0;
+            saturationValue.textContent = 0;
+            
+            exportScale.value = 1;
+            exportScaleValue.textContent = 1;
+            
+            exportGrid.checked = false;
+            liveModeToggle.checked = true;
+            
+            customPalette = [];
+            
+            if (currentImage) {
+                processImage();
+            }
+        }
+
+        // Afficher/masquer le chargement
+        function showLoading(show) {
+            loading.style.display = show ? 'flex' : 'none';
+        }
+
+        // Afficher la palette personnalisée
+        function renderCustomPalette() {
+            customPaletteDiv.innerHTML = '';
+            
+            customPalette.forEach((color, index) => {
+                const paletteItem = document.createElement('div');
+                paletteItem.className = 'palette-item';
+                
+                paletteItem.innerHTML = `
+                    <div class="color-preview" style="background-color: ${color.hex}"></div>
+                    <input type="text" value="${color.name}" style="width: 100px; margin-right: 10px;" 
+                        onchange="updateCustomPaletteName(${index}, this.value)">
+                    <input type="color" value="${color.hex}" 
+                        onchange="updateCustomPaletteColor(${index}, this.value)">
+                    <button style="width: auto; margin-left: 10px;" onclick="removeCustomPaletteColor(${index})">❌</button>
+                `;
+                
+                customPaletteDiv.appendChild(paletteItem);
+            });
+        }
+
+        // Mise à jour du nom de couleur personnalisée
+        window.updateCustomPaletteName = function(index, value) {
+            customPalette[index].name = value;
+        };
+
+        // Mise à jour de la couleur personnalisée
+        window.updateCustomPaletteColor = function(index, value) {
+            customPalette[index].hex = value;
+            if (liveMode && currentImage) processImage();
+        };
+
+        // Supprimer une couleur personnalisée
+        window.removeCustomPaletteColor = function(index) {
+            customPalette.splice(index, 1);
+            renderCustomPalette();
+            if (liveMode && currentImage) processImage();
+        };
+
+        // Démarrer l'application
+        window.onload = init;
+    </script>
+</body>
+</html>
